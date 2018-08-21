@@ -56,3 +56,51 @@ function groupEventsByDays(events) {
 
   return { eventsByDays, min, max }
 }
+
+function sumWithDistinctSize(sum, event) {
+  return sum + event.payload.distinct_size
+}
+
+function sumSizes(events) {
+  return events.reduce(sumWithDistinctSize, 0)
+}
+
+function getMinAndMax(users) {
+  // TODO give up and just use lodash
+  let mins = users.map(function(user) { return user.min })
+  let maxes = users.map(function(user) { return user.max })
+
+  return {
+    min: Math.min(...mins),
+    max: Math.max(...maxes),
+  }
+}
+
+function gatherEventDays(result, { eventsByDays }) {
+  return result.concat(Object.keys(eventsByDays))
+}
+
+function getEventsDaysDomain(users) {
+
+  const allDays = users
+                    .reduce(gatherEventDays, [])
+                    .map(convertStringToNumber)
+
+  const minDay = Math.min(...allDays)
+  const maxDay = Math.max(...allDays)
+
+  const startMoment = moment(minDay, DATE_FORMAT).startOf('day')
+  const endMoment = moment(maxDay, DATE_FORMAT).endOf('day')
+
+  const viewToMoment = startMoment // endMoment.clone().subtract(40, 'days')
+
+  let dayMoment = endMoment.clone()
+  let days = []
+
+  while (dayMoment.isSameOrAfter(viewToMoment)) {
+    days.push(dayMoment.format(DATE_FORMAT))
+    dayMoment.subtract(1, 'day')
+  }
+
+  return days
+}

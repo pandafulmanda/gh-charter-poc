@@ -21,3 +21,11 @@ img {
 #chart:hover #chart-information {
   display: block;
 }
+
+#chart rect {
+  stroke: none;
+}
+
+#chart .active {
+  stroke: black;
+}

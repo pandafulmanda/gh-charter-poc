@@ -66,7 +66,8 @@ function render(html) {
   const chartSVGElement = document.getElementById('chart-svg')
   const chartInformationElement = document.getElementById('chart-information')
 
-  chartSVGElement.addEventListener('mouseover', handleChartEvents.bind(chartSVGElement, chartInformationElement))
+  chartSVGElement.addEventListener('mouseover', handleChartEnter.bind(chartSVGElement, chartInformationElement))
+  chartSVGElement.addEventListener('mouseout', handleChartLeave.bind(chartSVGElement, chartInformationElement))
 }
 
 getSettings()

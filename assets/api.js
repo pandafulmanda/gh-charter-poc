@@ -5,12 +5,12 @@ function getRequestOptionsForUser(username, cachedUser) {
     per_page: 100,
     page: 1,
   }
+
+  // TODO avoiding mutation here will probably matter later.
   if (cachedUser && cachedUser.headers) {
-    requestOptions = Object.assign({
-      headers: {
-        'if-none-match': cachedUser.headers.etag,
-      },
-    }, requestOptions)
+    requestOptions.headers = {
+      'if-none-match': cachedUser.headers.etag,
+    }
   }
 
   return requestOptions
@@ -35,6 +35,7 @@ function returnFromCacheOrError(username, cachedUser, error) {
     console.warn(error)
     return
   }
+
   // TODO should also handle 404 somehow when search params should be adjusted
   return cachedUser
 }

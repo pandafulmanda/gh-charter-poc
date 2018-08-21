@@ -1,52 +1,5 @@
 const BASE_SIZE = 30
-
-function sumWithDistinctSize(sum, event) {
-  return sum + event.payload.distinct_size
-}
-
-function sumSizes(events) {
-  return events.reduce(sumWithDistinctSize, 0)
-}
-
-function getMinAndMax(users) {
-  // TODO give up and just use lodash
-  let mins = users.map(function(user) { return user.min })
-  let maxes = users.map(function(user) { return user.max })
-
-  return {
-    min: Math.min(...mins),
-    max: Math.max(...maxes),
-  }
-}
-
-function gatherEventDays(result, { eventsByDays }) {
-  return result.concat(Object.keys(eventsByDays))
-}
-
-function getEventsDaysDomain(users) {
-
-  const allDays = users
-                    .reduce(gatherEventDays, [])
-                    .map(convertStringToNumber)
-
-  const minDay = Math.min(...allDays)
-  const maxDay = Math.max(...allDays)
-
-  const startMoment = moment(minDay, DATE_FORMAT).startOf('day')
-  const endMoment = moment(maxDay, DATE_FORMAT).endOf('day')
-
-  const viewToMoment = startMoment // endMoment.clone().subtract(40, 'days')
-
-  let dayMoment = endMoment.clone()
-  let days = []
-
-  while (dayMoment.isSameOrAfter(viewToMoment)) {
-    days.push(dayMoment.format(DATE_FORMAT))
-    dayMoment.subtract(1, 'day')
-  }
-
-  return days
-}
+const ACTIVE_CLASS_NAME = 'active'
 
 function renderDay({ domain, range }, eventsByDay, day, dayIndex) {
   return `
@@ -77,11 +30,11 @@ function renderUserChart({ domain, range }, user) {
 
 function renderUserChartRow({ domain, range }, user, index) {
   return `
-<g transform="translate(0, ${index * BASE_SIZE})">
+<g transform="translate(0, ${index * BASE_SIZE})" data-username="${user.username}">
   <a class="link" target="_blank" xlink:href="https://github.com/${user.username}/">
     ${renderUserChart({ domain, range }, user)}
   </a>
-  <g transform="translate(${BASE_SIZE}, 0)" data-username="${user.username}">
+  <g transform="translate(${BASE_SIZE}, 0)">
     ${domain.map(function(day, dayIndex) {
       return renderDay({ domain, range }, user.eventsByDays[day], day, dayIndex)
     }).join('')}
@@ -94,13 +47,31 @@ function renderUserEventsForDay(day, user) {
   return user.eventsByDays[day].events.map(renderEvent).join('')
 }
 
-function handleChartEvents(informationElement, mouseoverEvent) {
+function removeClass(className, element) {
+  element.classList.remove(className)
+}
+
+function handleChartEnter(informationElement, mouseoverEvent) {
   if (!mouseoverEvent.target.dataset.day) {
     return
   }
+
   const dayRect = mouseoverEvent.target
+  const userRow = dayRect.parentNode.parentNode
+
   const day = dayRect.dataset.day
-  const username = dayRect.parentNode.dataset.username
+  const username = userRow.dataset.username
+
+  this.dataset.activeDay = day
+  this.dataset.activeUserName = username
+
+  Array.prototype.forEach.call(
+    this.querySelectorAll(`.${ACTIVE_CLASS_NAME}`),
+    removeClass.bind(null, ACTIVE_CLASS_NAME)
+  )
+
+  dayRect.classList.add(ACTIVE_CLASS_NAME)
+  userRow.classList.add(ACTIVE_CLASS_NAME)
 
   informationElement.style.top = `${mouseoverEvent.clientY}px`
   informationElement.style.left = `${mouseoverEvent.clientX}px`
@@ -114,6 +85,17 @@ function handleChartEvents(informationElement, mouseoverEvent) {
       informationElement.innerHTML = ''
       console.warn(`No events for ${username} on ${day}.`, error)
     })
+}
+
+function handleChartLeave(informationElement, mouseoutEvent) {
+
+  this.dataset.activeUserName = null
+  this.dataset.activeDay = null
+
+  Array.prototype.forEach.call(
+    this.querySelectorAll(`.${ACTIVE_CLASS_NAME}`),
+    removeClass.bind(null, ACTIVE_CLASS_NAME)
+  )
 }
 
 function renderClassChart(users) {
