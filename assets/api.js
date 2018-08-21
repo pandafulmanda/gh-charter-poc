@@ -1,3 +1,4 @@
+// TODO make these caching hooks endpoint agnostic
 function getRequestOptionsForUser(username, cachedUser) {
   let requestOptions = {
     username,
@@ -31,7 +32,9 @@ function handleAPIResponse(username, cachedUser, { data, headers }) {
 
 function returnFromCacheOrError(username, cachedUser, error) {
   if (error.message !== 'Not modified') {
-    return error
+    console.warn(error)
+    return
   }
+  // TODO should also handle 404 somehow when search params should be adjusted
   return cachedUser
 }

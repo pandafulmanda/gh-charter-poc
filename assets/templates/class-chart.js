@@ -1,12 +1,15 @@
 const BASE_SIZE = 30
 
+function sumWithDistinctSize(sum, event) {
+  return sum + event.payload.distinct_size
+}
+
 function sumSizes(events) {
-  return events.reduce(function(sum, event) {
-    return sum + event.payload.distinct_size
-  }, 0)
+  return events.reduce(sumWithDistinctSize, 0)
 }
 
 function getMinAndMax(users) {
+  // TODO give up and just use lodash
   let mins = users.map(function(user) { return user.min })
   let maxes = users.map(function(user) { return user.max })
 
@@ -16,14 +19,15 @@ function getMinAndMax(users) {
   }
 }
 
+function gatherEventDays(result, { eventsByDays }) {
+  return result.concat(Object.keys(eventsByDays))
+}
+
 function getEventsDaysDomain(users) {
 
-  const allDays = users.reduce(function (result, { eventsByDays }) {
-      return result.concat(Object.keys(eventsByDays))
-    }, [])
-    .map(function (dayString) {
-      return dayString * 1
-    })
+  const allDays = users
+                    .reduce(gatherEventDays, [])
+                    .map(convertStringToNumber)
 
   const minDay = Math.min(...allDays)
   const maxDay = Math.max(...allDays)
@@ -86,6 +90,10 @@ function renderUserChartRow({ domain, range }, user, index) {
   `
 }
 
+function renderUserEventsForDay(day, user) {
+  return user.eventsByDays[day].events.map(renderEvent).join('')
+}
+
 function handleChartEvents(informationElement, mouseoverEvent) {
   if (!mouseoverEvent.target.dataset.day) {
     return
@@ -98,9 +106,7 @@ function handleChartEvents(informationElement, mouseoverEvent) {
   informationElement.style.left = `${mouseoverEvent.clientX}px`
 
   localforage.getItem(username)
-    .then(function(user) {
-      return user.eventsByDays[day].events.map(renderEvent).join('')
-    })
+    .then(renderUserEventsForDay.bind(null, day))
     .then(function (listHTML) {
       informationElement.innerHTML = listHTML
     })

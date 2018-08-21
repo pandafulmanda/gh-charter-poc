@@ -41,6 +41,10 @@ function getEventsForUsers({ users }) {
   return Promise.all(users.map(getEventsForUser))
 }
 
+function filterForExisting(users) {
+  return users.filter(isTruthy)
+}
+
 function sortUsers(users) {
   return users.sort(byEventsStaleness)
 }
@@ -68,6 +72,7 @@ function render(html) {
 getSettings()
   .then(authenticate)
   .then(getEventsForUsers)
+  .then(filterForExisting)
   .then(sortUsers)
   .then(makeHTML)
   .then(render)
