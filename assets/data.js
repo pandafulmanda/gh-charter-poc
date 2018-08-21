@@ -41,20 +41,19 @@ function keyEventByDay(result, event) {
   result[day].events.push(event)
   result[day].sum = sumSizes(result[day].events)
 
-  if (result[day].sum > max) {
-    max = result[day].sum
-  }
+  return result
 }
 
 function groupEventsByDays(events) {
   let min = 0
-  let max = 0
 
   let eventsByDays = events
                       .filter(isPushEvent)
                       .reduce(keyEventByDay, {})
 
-  return { eventsByDays, min, max }
+  let sums = Object.values(eventsByDays).map(function(event) { return event.sum })
+
+  return { eventsByDays, min, max: Math.max(...sums) }
 }
 
 function sumWithDistinctSize(sum, event) {

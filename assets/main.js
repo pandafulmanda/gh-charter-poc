@@ -70,10 +70,26 @@ function render(html) {
   chartSVGElement.addEventListener('mouseout', handleChartLeave.bind(chartSVGElement, chartInformationElement))
 }
 
-getSettings()
-  .then(authenticate)
-  .then(getEventsForUsers)
-  .then(filterForExisting)
-  .then(sortUsers)
-  .then(makeHTML)
-  .then(render)
+function update() {
+  getSettings()
+    .then(authenticate)
+    .then(getEventsForUsers)
+    .then(filterForExisting)
+    .then(sortUsers)
+    .then(makeHTML)
+    .then(render)
+}
+
+let frame = 0
+const FRAMERATE = 30 * 60 * 1000 // when polling is activated, polls twice per hour
+
+function pollForChanges(timestamp) {
+  if (timestamp / FRAMERATE > frame) {
+    frame = frame + 1
+    update()
+  }
+  window.requestAnimationFrame(pollForChanges)
+}
+
+update()
+// window.requestAnimationFrame(pollForChanges)
