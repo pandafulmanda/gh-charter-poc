@@ -56,6 +56,10 @@ function groupEventsByDays(events) {
   return { eventsByDays, min, max: Math.max(...sums) }
 }
 
+function assignEventsByDays(user, data) {
+  return Object.assign(groupEventsByDays(data), user)
+}
+
 function sumWithDistinctSize(sum, event) {
   return sum + event.payload.distinct_size
 }

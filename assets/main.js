@@ -24,21 +24,25 @@ function authenticate(settings) {
 }
 
 function getEventsForUser(username) {
-
-  return localforage.getItem(username)
-    .then(function (cachedUser) {
-
-      let requestOptions = getRequestOptionsForUser(username, cachedUser)
-
-      return octokit.activity
-        .getEventsForUser(requestOptions)
-        .then(handleAPIResponse.bind(null, username, cachedUser))
-        .catch(returnFromCacheOrError.bind(null, username, cachedUser))
-    })
+  return get(
+    octokit.activity.getEventsForUser,
+    'activity.getEventsForUser',
+    { username },
+    assignEventsByDays,
+  )
 }
 
 function getEventsForUsers({ users }) {
   return Promise.all(users.map(getEventsForUser))
+}
+
+// TODO: implement Forks mode
+function getForksForRepo({ owner, repo }) {
+  return get(
+      octokit.repos.getForks,
+      'repos.getForks',
+      { owner, repo },
+    )
 }
 
 function filterForExisting(users) {
@@ -70,20 +74,38 @@ function render(html) {
   chartSVGElement.addEventListener('mouseout', handleChartLeave.bind(chartSVGElement, chartInformationElement))
 }
 
-function update() {
-  getSettings()
-    .then(authenticate)
-    .then(getEventsForUsers)
+function getAndRenderRepo(settings) {
+  return getForksForRepo(settings)
+    .then(console.log)
+}
+
+function getAndRenderUsers(settings) {
+  return getEventsForUsers(settings)
     .then(filterForExisting)
     .then(sortUsers)
     .then(makeHTML)
     .then(render)
 }
 
+function handleBySettings(settings) {
+  if (settings.mode === 'repo') {
+    return getAndRenderRepo(settings)
+  }
+
+  return getAndRenderUsers(settings)
+}
+
+function update() {
+  getSettings()
+    .then(authenticate)
+    .then(handleBySettings)
+}
+
 let frame = 0
 const FRAMERATE = 30 * 60 * 1000 // when polling is activated, polls twice per hour
 
 function pollForChanges(timestamp) {
+  // TODO: polling should indicate when updates have been received.
   if (timestamp / FRAMERATE > frame) {
     frame = frame + 1
     update()

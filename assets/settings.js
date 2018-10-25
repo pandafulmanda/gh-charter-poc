@@ -9,7 +9,10 @@ function getSettingsFromURL(settingsURL = './assets/settings.json') {
 
 function parseSettingsFromSearchParameters(searchParameters) {
   return {
-    users: searchParameters.get('users').split(','),
+    mode: searchParameters.get('mode'),
+    repo: searchParameters.get('repo'),
+    owner: searchParameters.get('owner'),
+    users: (searchParameters.get('users') || '').split(','),
     token: searchParameters.get('token'),
   }
 }

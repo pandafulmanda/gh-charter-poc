@@ -1,41 +1,56 @@
-// TODO make these caching hooks endpoint agnostic
-function getRequestOptionsForUser(username, cachedUser) {
-  let requestOptions = {
-    username,
+function getRequestOptionsForCached(key, options, cachedItem) {
+  let requestOptions = Object.assign({
     per_page: 100,
     page: 1,
-  }
+  }, options)
 
   // TODO avoiding mutation here will probably matter later.
-  if (cachedUser && cachedUser.headers) {
+  if (cachedItem && cachedItem.headers) {
     requestOptions.headers = {
-      'if-none-match': cachedUser.headers.etag,
+      'if-none-match': cachedItem.headers.etag,
     }
   }
 
   return requestOptions
 }
 
-function handleAPIResponse(username, cachedUser, { data, headers }) {
-  let user = {
-    username,
+function handleAPIResponse(key, options, cachedItem, transformItem, { data, headers }) {
+  let item = Object.assign({
     events: data,
     headers,
+  }, options)
+
+  // abstract this data transformation out
+  if (typeof transformItem === 'function') {
+    item = transformItem(item, data)
   }
 
-  user = Object.assign(groupEventsByDays(data), user)
+  localforage.setItem(key, item)
 
-  localforage.setItem(username, user)
-
-  return user
+  return item
 }
 
-function returnFromCacheOrError(username, cachedUser, error) {
+function returnFromCacheOrError(key, options, cachedItem, transformItem, error) {
   if (error.message !== 'Not modified') {
     console.warn(error)
     return
   }
 
   // TODO should also handle 404 somehow when search params should be adjusted
-  return cachedUser
+  return cachedItem
+}
+
+function get(apiFunction, topic, options, transformItem) {
+
+  let key = `${topic}=${JSON.stringify(options)}`
+
+  return localforage.getItem(key)
+  .then(function (cachedItem) {
+      let args = [key, options, cachedItem, transformItem]
+
+      let requestOptions = getRequestOptionsForCached.apply(null, args)
+      return apiFunction(requestOptions)
+        .then(handleAPIResponse.bind(null, ...args))
+        .catch(returnFromCacheOrError.bind(null, ...args))
+    })
 }
