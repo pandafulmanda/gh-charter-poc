@@ -1,3 +1,4 @@
+// TODO move these to a constants file.
 const BASE_SIZE = 30
 const ACTIVE_CLASS_NAME = 'active'
 
@@ -31,6 +32,8 @@ function renderUserChart({ domain, range }, user) {
   `
 }
 
+// TODO Translate to HTML, don't really need to use svgs.
+// TODO Separate out user chart rendering from data rendering
 function renderUserChartRow({ domain, range }, user, index) {
   return `
 <g transform="translate(0, ${index * BASE_SIZE})" data-username="${user.username}">
@@ -109,6 +112,8 @@ function handleChartLeave(informationElement, mouseoutEvent) {
   )
 }
 
+// TODO Translate to HTML, don't really need to use svgs.
+// TODO Separate out user chart rendering from data rendering
 function renderClassChart(users) {
   let domain = getEventsDaysDomain(users)
   let range = getMinAndMax(users)

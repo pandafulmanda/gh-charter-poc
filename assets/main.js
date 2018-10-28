@@ -71,10 +71,19 @@ function makeHTML(users) {
 `
 }
 
+// TODO make wrapping HTML the same for both views
+function makeForkHTML([ forks, tree ]) {
+  return `
+${renderClassChartForForks(forks)}
+  `
+}
+
 function render(html) {
   const container = document.getElementById('container')
   container.innerHTML = html
+}
 
+function addEventsActions() {
   const chartSVGElement = document.getElementById('chart-svg')
   const chartInformationElement = document.getElementById('chart-information')
 
@@ -82,12 +91,23 @@ function render(html) {
   chartSVGElement.addEventListener('mouseout', handleChartLeave.bind(chartSVGElement, chartInformationElement))
 }
 
+function addForkActions() {
+  const chartElement = document.getElementById('class-chart')
+  const chartDiffViewerElement = document.getElementById('class-chart--diff-viewer')
+
+  chartElement.addEventListener('click', handleForkClick.bind(chartElement, chartDiffViewerElement))
+}
+
 function getAndRenderRepo(settings) {
   return Promise.all([
       getForksForRepo(settings),
       getTreeForRepo(settings),
     ])
-    .then(console.log)
+    .then(filterReposForUsers.bind(null, settings))
+    .then(assignCompareLinksForForks.bind(null, settings))
+    .then(makeForkHTML)
+    .then(render)
+    .then(addForkActions)
 }
 
 function getAndRenderUsers(settings) {
@@ -96,6 +116,7 @@ function getAndRenderUsers(settings) {
     .then(sortUsers)
     .then(makeHTML)
     .then(render)
+    .then(addEventsActions)
 }
 
 function handleBySettings(settings) {

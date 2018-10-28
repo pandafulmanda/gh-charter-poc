@@ -29,3 +29,12 @@ img {
 #chart .active {
   stroke: black;
 }
+
+.class-chart--roster .list-group-item img {
+  max-height: none;
+}
+
+.class-chart--roster .list-group-item {
+  padding: 0;
+  cursor: pointer;
+}
