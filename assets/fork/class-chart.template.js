@@ -1,6 +1,6 @@
 function renderUserChartRowForFork(fork) {
   return `
-<li data-diff-link="${fork.compareLink}.diff" class="list-group-item">
+<li data-diff-link="${fork.compareLink}.diff" class="list-group-item list-group-item-action">
   <a href="${fork.compareLink}" target="class-chart--window">
     <img src="${fork.owner.avatar_url}" width="${BASE_SIZE}" height="${BASE_SIZE}"/>
   </a>
