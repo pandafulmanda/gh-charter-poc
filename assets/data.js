@@ -21,7 +21,7 @@ function filterForPushEvents(events = []) {
 }
 
 function getComparisonValue(user) {
-  let pushEventsOnly = user.events.filter(isPushEvent)
+  let pushEventsOnly = user.data.filter(isPushEvent)
 
   if (pushEventsOnly.length) {
     return moment(pushEventsOnly[0].created_at).valueOf()

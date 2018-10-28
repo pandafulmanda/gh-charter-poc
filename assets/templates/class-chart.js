@@ -2,29 +2,32 @@ const BASE_SIZE = 30
 const ACTIVE_CLASS_NAME = 'active'
 
 function renderDay({ domain, range }, eventsByDay, day, dayIndex) {
+  const eventsRatioLogScaled = (
+    (eventsByDay && Math.log(eventsByDay.sum + 1)) || 0) /
+    (Math.log(range.max + 1) - Math.log(range.min + 1)
+  )
+
   return `
 <rect
   transform="translate(${dayIndex * BASE_SIZE}, 0)"
   width="${BASE_SIZE}"
   height="${BASE_SIZE}"
   fill="green"
-  fill-opacity="${
-    ((eventsByDay && Math.log(eventsByDay.sum + 1)) || 0) /
-    (Math.log(range.max + 1) - Math.log(range.min + 1))
-  }"
+  fill-opacity="${eventsRatioLogScaled}"
   data-day="${day}"
+  data-events-ratio="${eventsRatioLogScaled}"
 ></rect>
   `
 }
 
 function renderUserChart({ domain, range }, user) {
 
-  if (!user.events.length) {
+  if (!user.data.length) {
     return `<rect width="${BASE_SIZE}" height="${BASE_SIZE}" fill="white" stroke="black"></rect>`
   }
 
   return `
-<image xlink:href="${user.events[0].actor.avatar_url}" width="${BASE_SIZE}" height="${BASE_SIZE}"/>
+<image xlink:href="${user.data[0].actor.avatar_url}" width="${BASE_SIZE}" height="${BASE_SIZE}"/>
   `
 }
 
@@ -75,8 +78,16 @@ function handleChartEnter(informationElement, mouseoverEvent) {
 
   informationElement.style.top = `${mouseoverEvent.clientY}px`
   informationElement.style.left = `${mouseoverEvent.clientX}px`
-
-  localforage.getItem(username)
+  
+  if (mouseoverEvent.target.dataset.eventsRatio === "0") {
+    informationElement.innerHTML = `
+<li class="list-group-item">
+  No events for <strong>${username}</strong> on ${day}.
+</li>
+    `
+    return
+  }
+  getFromStorage('activity.getEventsForUser', { username })
     .then(renderUserEventsForDay.bind(null, day))
     .then(function (listHTML) {
       informationElement.innerHTML = listHTML

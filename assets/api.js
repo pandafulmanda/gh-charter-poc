@@ -16,11 +16,10 @@ function getRequestOptionsForCached(key, options, cachedItem) {
 
 function handleAPIResponse(key, options, cachedItem, transformItem, { data, headers }) {
   let item = Object.assign({
-    events: data,
+    data,
     headers,
   }, options)
 
-  // abstract this data transformation out
   if (typeof transformItem === 'function') {
     item = transformItem(item, data)
   }
@@ -40,12 +39,20 @@ function returnFromCacheOrError(key, options, cachedItem, transformItem, error) 
   return cachedItem
 }
 
+function makeKey(topic, options) {
+  return `${topic}=${JSON.stringify(options)}`
+}
+
+function getFromStorage(topic, options) {
+  let key = makeKey(topic, options)
+  return localforage.getItem(key)
+}
+
 function get(apiFunction, topic, options, transformItem) {
 
-  let key = `${topic}=${JSON.stringify(options)}`
-
-  return localforage.getItem(key)
-  .then(function (cachedItem) {
+  return getFromStorage(topic, options)
+    .then(function (cachedItem) {
+      let key = makeKey(topic, options)
       let args = [key, options, cachedItem, transformItem]
 
       let requestOptions = getRequestOptionsForCached.apply(null, args)

@@ -45,6 +45,14 @@ function getForksForRepo({ owner, repo }) {
     )
 }
 
+function getTreeForRepo({ owner, repo }, tree_sha = 'master', recursive = 1) {
+  return get(
+    octokit.gitdata.getTree,
+    'gitdata.getTree',
+    { owner, repo, tree_sha, recursive },
+  )
+}
+
 function filterForExisting(users) {
   return users.filter(isTruthy)
 }
@@ -75,7 +83,10 @@ function render(html) {
 }
 
 function getAndRenderRepo(settings) {
-  return getForksForRepo(settings)
+  return Promise.all([
+      getForksForRepo(settings),
+      getTreeForRepo(settings),
+    ])
     .then(console.log)
 }
 
